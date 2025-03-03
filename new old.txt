@@ -1,0 +1,220 @@
+import { useState } from 'react'
+import { Button } from "/components/ui/button"
+import { ArrowRight, ShoppingCart, Check } from "lucide-react"
+import { Card, CardContent, CardDescription, CardTitle } from "/components/ui/card"
+
+interface Product {
+  id: number
+  name: string
+  price: number
+  quantity: number
+}
+
+const newProducts: Product[] = [
+  { id: 1, name: 'New Product 1', price: 29.99, quantity: 10 },
+  { id: 2, name: 'New Product 2', price: 49.99, quantity: 5 },
+  { id: 3, name: 'New Product 3', price: 19.99, quantity: 20 },
+  { id: 4, name: 'New Product 4', price: 39.99, quantity: 15 },
+  { id: 5, name: 'New Product 5', price: 24.99, quantity: 8 },
+]
+
+const oldProducts: Product[] = [
+  { id: 6, name: 'Old Product 1', price: 19.99, quantity: 15 },
+  { id: 7, name: 'Old Product 2', price: 29.99, quantity: 8 },
+  { id: 8, name: 'Old Product 3', price: 39.99, quantity: 12 },
+  { id: 9, name: 'Old Product 4', price: 14.99, quantity: 25 },
+  { id: 10, name: 'Old Product 5', price: 29.99, quantity: 10 },
+]
+
+export default function ProductLandingPage() {
+  const [view, setView] = useState<'home' | 'new-products' | 'old-products' | 'checkout'>('home')
+  const [cart, setCart] = useState<Product[]>([])
+  const [orderPlaced, setOrderPlaced] = useState(false)
+
+  const addToCart = (product: Product) => {
+    setCart((prevCart) => {
+      const existingProduct = prevCart.find((p) => p.id === product.id)
+      if (existingProduct) {
+        return prevCart.map((p) =>
+          p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
+        )
+      }
+      return [...prevCart, { ...product, quantity: 1 }]
+    })
+  }
+
+  const removeFromCart = (productId: number) => {
+    setCart((prevCart) =>
+      prevCart.map((p) =>
+        p.id === productId ? { ...p, quantity: p.quantity - 1 } : p
+      ).filter((p) => p.quantity > 0)
+    )
+  }
+
+  const totalItemsInCart = cart.reduce((total, product) => total + product.quantity, 0)
+  const totalPrice = cart.reduce((total, product) => total + product.price * product.quantity, 0)
+
+  const handleCheckout = () => {
+    setView('checkout')
+  }
+
+  const handlePlaceOrder = () => {
+    setOrderPlaced(true)
+    setCart([]) // Reset the cart
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen bg-white text-gray-900">
+      <header className="px-4 lg:px-6 h-14 flex items-center justify-between border-b">
+        <div className="flex items-center">
+          <h1 className="text-2xl font-bold">Product Co.</h1>
+        </div>
+        <nav className="hidden sm:flex gap-4">
+          <a className="text-sm font-medium hover:underline underline-offset-4" href="#">
+            About
+          </a>
+          <a className="text-sm font-medium hover:underline underline-offset-4" href="#">
+            Contact
+          </a>
+        </nav>
+        <div className="flex items-center">
+          <Button variant="outline" onClick={() => setView('home')}>
+            Home
+          </Button>
+          <Button variant="outline" className="ml-2" onClick={() => setView('new-products')}>
+            New Products
+          </Button>
+          <Button variant="outline" className="ml-2" onClick={() => setView('old-products')}>
+            Old Products
+          </Button>
+          <Button variant="outline" className="ml-2 relative" onClick={() => setView('checkout')}>
+            <ShoppingCart className="h-4 w-4" />
+            {totalItemsInCart > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                {totalItemsInCart}
+              </span>
+            )}
+          </Button>
+        </div>
+      </header>
+      <main className="flex-1 flex items-center justify-center">
+        {view === 'home' && (
+          <div className="text-center max-w-3xl mx-auto p-4">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4">Discover Our Products</h1>
+            <p className="text-lg sm:text-xl text-gray-600 mb-8">
+              Explore our latest and most popular products. Click below to see what we have in store.
+            </p>
+            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+              <Button onClick={() => setView('new-products')}>
+                New Products <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+              <Button onClick={() => setView('old-products')}>
+                Old Products <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+        {view === 'new-products' && (
+          <div className="w-full p-4">
+            <h2 className="text-3xl font-bold mb-4">New Products</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {newProducts.map((product) => (
+                <Card key={product.id}>
+                  <CardContent className="p-4 flex flex-col items-center text-center space-y-2">
+                    <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16" />
+                    <CardTitle>{product.name}</CardTitle>
+                    <CardDescription>${product.price.toFixed(2)}</CardDescription>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" size="sm" onClick={() => addToCart(product)}>
+                        Add to Cart
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+        {view === 'old-products' && (
+          <div className="w-full p-4">
+            <h2 className="text-3xl font-bold mb-4">Old Products</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {oldProducts.map((product) => (
+                <Card key={product.id}>
+                  <CardContent className="p-4 flex flex-col items-center text-center space-y-2">
+                    <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16" />
+                    <CardTitle>{product.name}</CardTitle>
+                    <CardDescription>${product.price.toFixed(2)}</CardDescription>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="outline" size="sm" onClick={() => addToCart(product)}>
+                        Add to Cart
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+        {view === 'checkout' && (
+          <div className="w-full p-4">
+            <h2 className="text-3xl font-bold mb-4">Checkout</h2>
+            {orderPlaced ? (
+              <div className="text-center">
+                <Check className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold mb-2">Your order has been placed!</h3>
+                <p className="text-gray-600 mb-4">
+                  Thank you for your order. Our customer service will contact you shortly.
+                </p>
+                <Button variant="outline" onClick={() => {
+                  setOrderPlaced(false)
+                  setView('home')
+                }}>
+                  Continue Shopping
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-4 bg-gray-100 rounded">
+                      <div>
+                        <p className="font-bold">{item.name}</p>
+                        <p className="text-gray-600">${item.price.toFixed(2)} x {item.quantity}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => removeFromCart(item.id)}>
+                          Remove
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => addToCart(item)}>
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 flex justify-between">
+                  <p className="text-lg font-bold">Total: ${totalPrice.toFixed(2)}</p>
+                  <Button onClick={handlePlaceOrder}>
+                    Place Order <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </main>
+      <footer className="flex flex-col sm:flex-row py-6 w-full shrink-0 items-center justify-between px-4 lg:px-6 border-t">
+        <p className="text-xs text-gray-500">© 2023 Product Co. All rights reserved.</p>
+        <nav className="flex gap-4">
+          <a className="text-xs hover:underline underline-offset-4" href="#">
+            Terms of Service
+          </a>
+          <a className="text-xs hover:underline underline-offset-4" href="#">
+            Privacy
+          </a>
+        </nav>
+      </footer>
+    </div>
+  )
+}
